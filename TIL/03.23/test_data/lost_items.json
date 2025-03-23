@@ -1,0 +1,202 @@
+[
+  {
+    "id": 1,
+    "main_category": "유가증권",
+    "subcategory": "여행 상품권",
+    "color": "흰색",
+    "description": "흰색 유가증권를 공원에서 잃어버렸습니다.",
+    "location": "공원",
+    "image_path": "test_data/lost_1.jpg",
+    "date_lost": "2023-01-09"
+  },
+  {
+    "id": 2,
+    "main_category": "증명서",
+    "subcategory": "신분증 면허증",
+    "color": "갈색",
+    "description": "갈색색 증명서, 오래된 특징이 있습니다.",
+    "location": "회사",
+    "image_path": "test_data/lost_2.jpg",
+    "date_lost": "2023-08-14"
+  },
+  {
+    "id": 3,
+    "main_category": "컴퓨터",
+    "subcategory": "애플노트북 기타",
+    "color": "주황색",
+    "description": "영화관 근처에서 주황색 애플노트북 기타를 분실했습니다.",
+    "location": "영화관",
+    "image_path": null,
+    "date_lost": "2023-12-14"
+  },
+  {
+    "id": 4,
+    "main_category": "전자기기",
+    "subcategory": "스마트워치",
+    "color": "흰색",
+    "description": "새것 같은 특징의 흰색 전자기기를 찾고 있습니다.",
+    "location": "쇼핑몰",
+    "image_path": "test_data/lost_4.jpg",
+    "date_lost": "2023-08-19"
+  },
+  {
+    "id": 5,
+    "main_category": "유류품",
+    "subcategory": "유류품",
+    "color": "녹색",
+    "description": "녹색색 유류품, 작은 특징이 있습니다.",
+    "location": "공원",
+    "image_path": "test_data/lost_5.jpg",
+    "date_lost": "2023-12-26"
+  },
+  {
+    "id": 6,
+    "main_category": "증명서",
+    "subcategory": "여권 기타",
+    "color": "파란색",
+    "description": "파란색색 증명서, 중간 크기의 특징이 있습니다.",
+    "location": "도서관",
+    "image_path": "test_data/lost_6.jpg",
+    "date_lost": "2023-11-26"
+  },
+  {
+    "id": 7,
+    "main_category": "지갑",
+    "subcategory": "남성용 지갑",
+    "color": "녹색",
+    "description": "녹색색 지갑, 접이식 특징이 있습니다.",
+    "location": "지하철",
+    "image_path": null,
+    "date_lost": "2023-01-27"
+  },
+  {
+    "id": 8,
+    "main_category": "귀금속",
+    "subcategory": "귀걸이 시계",
+    "color": "빨간색",
+    "description": "빨간색색 귀금속, 오래된 특징이 있습니다.",
+    "location": "버스",
+    "image_path": "test_data/lost_8.jpg",
+    "date_lost": "2023-12-21"
+  },
+  {
+    "id": 9,
+    "main_category": "유류품",
+    "subcategory": "무연고유류품",
+    "color": "기타",
+    "description": "쇼핑몰 근처에서 기타 무연고유류품를 분실했습니다.",
+    "location": "쇼핑몰",
+    "image_path": null,
+    "date_lost": "2023-09-01"
+  },
+  {
+    "id": 10,
+    "main_category": "휴대폰",
+    "subcategory": "아이폰",
+    "color": "기타",
+    "description": "도서관에서 기타 아이폰를 두고 내렸습니다.",
+    "location": "도서관",
+    "image_path": "test_data/lost_10.jpg",
+    "date_lost": "2023-04-01"
+  },
+  {
+    "id": 11,
+    "main_category": "카드",
+    "subcategory": "신용(체크)카드",
+    "color": "빨간색",
+    "description": "큰 특징의 빨간색 카드를 찾고 있습니다.",
+    "location": "식당",
+    "image_path": null,
+    "date_lost": "2023-05-20"
+  },
+  {
+    "id": 12,
+    "main_category": "지갑",
+    "subcategory": "여성용 지갑",
+    "color": "갈색",
+    "description": "갈색색 지갑, 카드 수납공간이 많은 특징이 있습니다.",
+    "location": "카페",
+    "image_path": null,
+    "date_lost": "2023-09-11"
+  },
+  {
+    "id": 13,
+    "main_category": "귀금속",
+    "subcategory": "반지 목걸이",
+    "color": "기타",
+    "description": "기타색 귀금속, 빛나는 특징이 있습니다.",
+    "location": "카페",
+    "image_path": "test_data/lost_13.jpg",
+    "date_lost": "2023-07-28"
+  },
+  {
+    "id": 14,
+    "main_category": "산업용품",
+    "subcategory": "기타용품",
+    "color": "노란색",
+    "description": "깨끗한 특징의 노란색 산업용품를 찾고 있습니다.",
+    "location": "쇼핑몰",
+    "image_path": "test_data/lost_14.jpg",
+    "date_lost": "2023-10-08"
+  },
+  {
+    "id": 15,
+    "main_category": "카드",
+    "subcategory": "신용(체크)카드",
+    "color": "빨간색",
+    "description": "공원 근처에서 빨간색 신용(체크)카드를 분실했습니다.",
+    "location": "공원",
+    "image_path": "test_data/lost_15.jpg",
+    "date_lost": "2023-06-03"
+  },
+  {
+    "id": 16,
+    "main_category": "지갑",
+    "subcategory": "기타 지갑",
+    "color": "파란색",
+    "description": "카드 수납공간이 많은 특징의 파란색 지갑를 찾고 있습니다.",
+    "location": "도서관",
+    "image_path": "test_data/lost_16.jpg",
+    "date_lost": "2023-10-19"
+  },
+  {
+    "id": 17,
+    "main_category": "휴대폰",
+    "subcategory": "삼성휴대폰",
+    "color": "주황색",
+    "description": "약간 손상된 특징의 주황색 휴대폰를 찾고 있습니다.",
+    "location": "식당",
+    "image_path": "test_data/lost_17.jpg",
+    "date_lost": "2023-02-22"
+  },
+  {
+    "id": 18,
+    "main_category": "의류",
+    "subcategory": "남성의류",
+    "color": "검정색",
+    "description": "버스 근처에서 검정색 남성의류를 분실했습니다.",
+    "location": "버스",
+    "image_path": "test_data/lost_18.jpg",
+    "date_lost": "2023-04-27"
+  },
+  {
+    "id": 19,
+    "main_category": "가방",
+    "subcategory": "여성용가방",
+    "color": "파란색",
+    "description": "도서관에서 파란색 여성용가방를 두고 내렸습니다.",
+    "location": "도서관",
+    "image_path": "test_data/lost_19.jpg",
+    "date_lost": "2023-11-02"
+  },
+  {
+    "id": 20,
+    "main_category": "증명서",
+    "subcategory": "신분증 면허증",
+    "color": "주황색",
+    "description": "쇼핑몰에서 주황색 신분증 면허증를 두고 내렸습니다.",
+    "location": "쇼핑몰",
+    "image_path": "test_data/lost_20.jpg",
+    "date_lost": "2023-11-13"
+  }
+]
