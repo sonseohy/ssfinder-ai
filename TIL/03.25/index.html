@@ -1,0 +1,535 @@
+<!-- python -m http.server 8080 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>분실물 등록</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background-color: #fff;
+            min-height: 100vh;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .header {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #f1f1f1;
+            background-color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 20px;
+            font-size: 12px;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #555;
+            padding: 0;
+            margin-right: 15px;
+        }
+        
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #555;
+            padding: 0;
+            margin-left: auto;
+        }
+        
+        .title {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .main-title {
+            font-size: 24px;
+            font-weight: bold;
+            padding: 20px;
+            padding-bottom: 10px;
+        }
+        
+        .image-upload {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            margin: 0 20px 20px;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .image-placeholder {
+            width: 80px;
+            height: 80px;
+            background-color: #777;
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        
+        .image-placeholder svg {
+            width: 40px;
+            height: 40px;
+            fill: #fff;
+        }
+        
+        #imagePreview {
+            max-width: 100%;
+            max-height: 200px;
+            margin: 10px auto;
+            display: none;
+        }
+        
+        .form-card {
+            margin: 0 20px 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .form-card label {
+            display: block;
+            padding: 12px 15px;
+            font-size: 14px;
+            color: #555;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-card input, .form-card textarea {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            background: transparent;
+            box-sizing: border-box;
+        }
+        
+        .field-with-arrow {
+            display: flex;
+            align-items: center;
+            padding-right: 15px;
+        }
+        
+        .field-with-arrow input, .field-with-arrow div {
+            flex-grow: 1;
+            padding: 15px;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+        }
+        
+        .arrow-icon {
+            color: #aaa;
+        }
+        
+        .submit-button {
+            background-color: #4c9aff;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 500;
+            width: calc(100% - 40px);
+            margin: 15px 20px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #eee;
+            padding: 10px 0;
+            background-color: #fff;
+            position: sticky;
+            bottom: 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+            text-decoration: none;
+        }
+        
+        .nav-item.active {
+            color: #4c9aff;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        #fileInput {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4c9aff;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .debug-info {
+            margin: 15px 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+            display: none;
+        }
+        
+        .debug-toggle {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 12px;
+            color: #999;
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-bar">
+            <div>9:30</div>
+            <div>
+                <span>●</span>
+                <span>▲</span>
+            </div>
+        </div>
+        
+        <div class="header">
+            <button class="back-button">←</button>
+            <div class="title">습득물 등록하기</div>
+            <button class="close-button">×</button>
+        </div>
+        
+        <div class="main-title">어떤 물건을 주웠나요?</div>
+        
+        <form id="lostItemForm">
+            <div class="image-upload">
+                <input type="file" id="fileInput" name="file" accept="image/*" required>
+                <div class="image-placeholder" id="imagePlaceholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5-7l-3 3.72L9 13l-3 4h12l-4-5z"/>
+                    </svg>
+                </div>
+                <img id="imagePreview" alt="">
+            </div>
+            
+            <div class="form-card">
+                <label for="title">품목명</label>
+                <input type="text" id="title" name="title" placeholder="품목명을 입력하세요" required>
+            </div>
+            
+            <div class="form-card">
+                <label>카테고리</label>
+                <div class="field-with-arrow">
+                    <div id="category">전자기기 > 선택하세요</div>
+                    <span class="arrow-icon">></span>
+                </div>
+            </div>
+            
+            <div class="form-card">
+                <label>색상</label>
+                <div class="field-with-arrow">
+                    <div id="color">선택하세요</div>
+                    <span class="arrow-icon">></span>
+                </div>
+            </div>
+            
+            <div class="form-card">
+                <label>분실 장소</label>
+                <div class="field-with-arrow">
+                    <div id="location">선택하세요</div>
+                    <span class="arrow-icon">></span>
+                </div>
+            </div>
+            
+            <div class="form-card">
+                <label>분실 일자</label>
+                <div class="field-with-arrow">
+                    <div id="lostDate">2025년 3월 21일</div>
+                    <span class="arrow-icon">></span>
+                </div>
+            </div>
+            
+            <div class="form-card">
+                <label for="detail">상세 설명</label>
+                <textarea id="detail" name="detail" rows="4" placeholder="상세 설명을 입력하세요"></textarea>
+            </div>
+            
+            <button type="submit" class="submit-button">작성 완료</button>
+            
+            <div class="debug-toggle" id="debugToggle">디버그 정보 표시</div>
+            <div class="debug-info" id="debugInfo"></div>
+        </form>
+        
+        <div class="bottom-nav">
+            <a href="#" class="nav-item">
+                <div class="nav-icon">🏠</div>
+                <div>메인</div>
+            </a>
+            <a href="#" class="nav-item active">
+                <div class="nav-icon">🔍</div>
+                <div>찾아주오</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">🔔</div>
+                <div>주워주오</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">👤</div>
+                <div>채팅</div>
+            </a>
+        </div>
+    </div>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>AI가 분석 중입니다...</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const imagePlaceholder = document.getElementById('imagePlaceholder');
+            const lostItemForm = document.getElementById('lostItemForm');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const debugToggle = document.getElementById('debugToggle');
+            const debugInfo = document.getElementById('debugInfo');
+            
+            // 디버그 정보 토글
+            debugToggle.addEventListener('click', function() {
+                if (debugInfo.style.display === 'none' || debugInfo.style.display === '') {
+                    debugInfo.style.display = 'block';
+                    debugToggle.textContent = '디버그 정보 숨기기';
+                } else {
+                    debugInfo.style.display = 'none';
+                    debugToggle.textContent = '디버그 정보 표시';
+                }
+            });
+            
+            // 이미지 미리보기 및 자동 AI 분석
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    console.log(`이미지 선택: ${file.name} (${Math.round(file.size / 1024)} KB)`);
+                    logDebug(`이미지 선택: ${file.name} (${Math.round(file.size / 1024)} KB)`);
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                        imagePlaceholder.style.display = 'none';
+                        
+                        // 이미지가 로드되면 즉시 AI 분석 시작
+                        analyzeImage(file);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // 디버그 로그 함수
+            function logDebug(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                debugInfo.appendChild(logEntry);
+                
+                // 스크롤을 아래로 이동
+                debugInfo.scrollTop = debugInfo.scrollHeight;
+            }
+            
+            // AI 분석 함수
+            function analyzeImage(file) {
+                loadingOverlay.style.display = 'flex';
+                console.log('AI 서버에 이미지 전송 중...');
+                logDebug('AI 서버에 이미지 전송 중...');
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('location', document.getElementById('location').textContent);
+                formData.append('lost_at', document.getElementById('lostDate').textContent);
+                
+                fetch('http://localhost:8000/analyze/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if(response.status === 500) {
+                            throw new Error('서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                        }
+                        return response.text().then(text => {
+                            throw new Error(text || '서버 오류가 발생했습니다.');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('분석 결과:', result);
+                    logDebug('분석 결과 수신 완료');
+                    logDebug(`물품: ${result.item_type}, 신뢰도: ${(result.confidence * 100).toFixed(1)}%`);
+                    
+                    // 결과를 폼에 채우기
+                    fillFormWithResults(result);
+                    loadingOverlay.style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('분석 오류:', error);
+                    logDebug(`오류 발생: ${error.message}`);
+                    alert('이미지 분석 중 오류가 발생했습니다: ' + error.message);
+                    loadingOverlay.style.display = 'none';
+                });
+            }
+            
+            // 분석 결과로 폼 채우기
+            function fillFormWithResults(data) {
+                // 품목명 설정
+                if (data.item_type) {
+                    document.getElementById('title').value = data.item_type;
+                    console.log(`품목명 설정: ${data.item_type}`);
+                    logDebug(`품목명 설정: ${data.item_type}`);
+                }
+                
+                // 카테고리 설정
+                const categoryMap = {
+                    1: "액세서리 > 지갑",
+                    2: "전자기기 > 휴대전화",
+                    3: "가방 > 가방",
+                    4: "전자기기 > 노트북",
+                    5: "의류 > 의류",
+                    6: "액세서리 > 액세서리",
+                    7: "기타 > 기타"
+                };
+                
+                if (data.category_id && categoryMap[data.category_id]) {
+                    document.getElementById('category').textContent = categoryMap[data.category_id];
+                    console.log(`카테고리 설정: ${categoryMap[data.category_id]}`);
+                    logDebug(`카테고리 설정: ${categoryMap[data.category_id]}`);
+                }
+                
+                // 색상 설정
+                if (data.colors && data.colors.length > 0) {
+                    document.getElementById('color').textContent = data.colors[0].name;
+                    console.log(`색상 설정: ${data.colors[0].name}`);
+                    logDebug(`색상 설정: ${data.colors[0].name} (${data.colors[0].hex})`);
+                    
+                    // 색상 정보 디버그 출력
+                    data.colors.forEach((color, index) => {
+                        logDebug(`- 색상 #${index+1}: ${color.name}, ${color.hex}, ${color.percentage}%`);
+                    });
+                }
+                
+                // 상세 설명 설정
+                if (data.description) {
+                    document.getElementById('detail').value = data.description;
+                    console.log(`설명 설정: ${data.description}`);
+                    logDebug(`설명 설정: ${data.description}`);
+                }
+                
+                // 재질 정보 디버그 출력
+                if (data.material) {
+                    logDebug(`재질: ${data.material}`);
+                }
+                
+                // 자동 태그 디버그 출력
+                if (data.auto_tags) {
+                    logDebug(`자동 태그: ${data.auto_tags.join(', ')}`);
+                }
+            }
+            
+            // 폼 제출
+            lostItemForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                console.log('습득물 등록 완료!');
+                logDebug('습득물 등록 완료!');
+                alert('습득물이 등록되었습니다!');
+            });
+            
+            // 뒤로가기 버튼
+            document.querySelector('.back-button').addEventListener('click', function() {
+                window.history.back();
+            });
+            
+            // 닫기 버튼
+            document.querySelector('.close-button').addEventListener('click', function() {
+                window.close();
+            });
+        });
+    </script>
+</body>
+</html>
