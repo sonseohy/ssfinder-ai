@@ -9,7 +9,7 @@ import io
 app = FastAPI(title="분실물 AI 모델 서버")
 
 # 모델 로드
-yolo_model = YOLO('models/yolov8x.pt')
+yolo_model = YOLO('models/yolov8m.pt')
 efficientnet_model = tf.keras.models.load_model('models/efficientnet.h5')
 resnet_model = tf.keras.models.load_model('models/resnet.h5')
 
