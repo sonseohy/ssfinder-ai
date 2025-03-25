@@ -22,9 +22,9 @@ SIMILARITY_THRESHOLD = 0.7  # 유사도 임계값
 BATCH_SIZE = 100  # 한 번에 처리할 습득물 데이터 수
 
 # 단계 1: 경찰청 API에서 습득물 데이터 가져오기
-def fetch_police_lost_items(service_key, num_items=10):
+def fetch_police_lost_items(service_key, num_items=5):
     """
-    경찰청 API를 통해 습득물 데이터를 가져옴
+    경찰청 API를 통해 최신 습득물 데이터를 가져옴
     
     Args:
         service_key (str): 경찰청 API 서비스 키
@@ -35,17 +35,19 @@ def fetch_police_lost_items(service_key, num_items=10):
     """
     url = 'http://apis.data.go.kr/1320000/LosfundInfoInqireService/getLosfundInfoAccToClAreaPd'
     
-    # 현재는 지갑(PRH200) 카테고리만 가져오는 예시
+    # 현재 날짜 기준으로 최신 데이터를 가져오기 위한 파라미터 설정
     params = {
         'serviceKey': service_key,
-        'PRDT_CL_CD_01': 'PRH000',  # 분류 코드
-        'PRDT_CL_CD_02': 'PRH200',  # 지갑 분류
-        'FD_COL_CD': 'CL1002',      # 분실물 색상 코드
-        'START_YMD': '20240101',    # 시작 날짜 (최근 3개월)
-        'END_YMD': '20240322',      # 종료 날짜 (현재 날짜)
-        'N_FD_LCT_CD': 'LCA000',    # 습득 장소 코드
-        'pageNo': '1',
-        'numOfRows': str(num_items)
+        # 'PRDT_CL_CD_01': 'PRH000',  # 분류 코드
+        # 'PRDT_CL_CD_02': 'PRH200',  # 지갑 분류
+        # 'FD_COL_CD': 'CL1002',      # 분실물 색상 코드
+        'START_YMD': '20250101',    # 시작 날짜 (최근 3개월)
+        'END_YMD': '20250322',      # 종료 날짜 (현재 날짜)
+        # 'N_FD_LCT_CD': 'LCA000',    # 습득 장소 코드
+        'pageNo': '1',              # 첫 페이지부터 조회
+        'numOfRows': str(num_items),# 가져올 항목 수 (5개)
+        'sort': 'DESC',             # 내림차순 정렬 (최신순)
+        'sortField': 'fdYmd'        # 습득일자 기준으로 정렬
     }
     
     try:
@@ -66,7 +68,7 @@ def fetch_police_lost_items(service_key, num_items=10):
                 
                 items.append(item_data)
                 
-            print(f"API에서 {len(items)}개 습득물 데이터를 성공적으로 가져왔습니다.")
+            print(f"API에서 {len(items)}개 최신 습득물 데이터를 성공적으로 가져왔습니다.")
             return items
         else:
             print(f"API 호출 실패: {response.status_code}")
@@ -90,13 +92,11 @@ if __name__ == "__main__":
         print("3. 스크립트 실행 시 export POLICE_API_SERVICE_KEY=your_key_here")
         exit(1)
     
-    # 습득물 데이터 가져오기
-    items = fetch_police_lost_items(SERVICE_KEY, 20)
+    # 최신 습득물 데이터 5개 가져오기
+    items = fetch_police_lost_items(SERVICE_KEY, 10)
     
     # 결과 확인
-    for i, item in enumerate(items[:3]):  # 처음 3개만 출력
+    for i, item in enumerate(items):  # 5개 모두 출력
         print(f"\n아이템 {i+1}:")
         for key, value in item.items():
             print(f"  {key}: {value}")
-
-
