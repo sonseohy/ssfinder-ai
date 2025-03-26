@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "data": {
+    "caption": "these are two umbrellas sitting next to each other on a white surface",
+    "title": "blue umbrella",
+    "description": "these are two umbrellas sitting next to each other on a white surface\n\nMaterial: leather\nDistinctive features: open umbrella",
+    "category": "umbrella",
+    "color": "blue",
+    "material": "leather",
+    "brand": "",
+    "distinctive_features": "open umbrella",
+    "raw_answers": {
+      "category": "music player",
+      "color": "blue",
+      "material": "leather",
+      "distinctive_features": "open umbrella",
+      "brand": "esprit"
+    }
+  }
+}
