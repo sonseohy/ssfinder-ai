@@ -285,15 +285,23 @@ class LostItemAnalyzer:
         return answer
 
     # 캡션에서 카테고리 추출출
-    def extract_category_from_caption(self, caption: str) -> str:
-
+    def extract_category_from_caption(self, caption):
         caption_lower = caption.lower()
+        words = caption_lower.split()
+        
+        print(f"### DEBUG: Words in caption: {words}")
+        
+        # 키워드를 길이 순으로 정렬 (긴 것이 먼저)
+        sorted_keywords = sorted(self.category_mapping.keys(), key=len, reverse=True)
         
         # 각 매핑된 키워드를 확인
-        for keyword, category in self.category_mapping.items():
-            if keyword in caption_lower:
-                return category
-                
+        for keyword in sorted_keywords:
+            # 전체 단어 매칭 또는 복합어 검사
+            if keyword in words or (len(keyword.split()) > 1 and keyword in caption_lower):
+                print(f"### DEBUG: Found keyword '{keyword}' -> category '{self.category_mapping[keyword]}'")
+                return self.category_mapping[keyword]
+        
+        print("### DEBUG: No category found in caption")
         return ""
 
     # 유효 색상 확인
@@ -444,18 +452,27 @@ class LostItemAnalyzer:
     
     # 답변 기반 게시글 제목 생성성
     def _generate_title(self, answers: Dict[str, str], caption: str, category: str, brand: str) -> str:
-
         # 색상 추출
         color = answers["color"].lower()
         
         # 상품 이름 추출 시도 (캡션에서 핵심 단어 추출)
         product_name = ""
-        common_items = ["ipad", "iphone", "macbook", "laptop", "phone", "tablet", "watch", "airpods", 
-                       "wallet", "bag", "umbrella", "headphones", "camera", "book", "glasses"]
         
+        # 디버깅: 제품명 추출 과정 로깅
+        print(f"### DEBUG: Extracting product name from caption: {caption}")
+        
+        # 정확한 단어 매칭을 위해 캡션을 단어로 분리
+        caption_words = caption.lower().split()
+        
+        common_items = ["headphones", "earphones", "ipad", "iphone", "macbook", "laptop", "phone", 
+                    "tablet", "watch", "airpods", "wallet", "bag", "umbrella", "camera", 
+                    "book", "glasses"]
+        
+        # 단어 단위로 정확하게 매칭
         for item in common_items:
-            if item in caption.lower():
+            if item in caption_words:
                 product_name = item
+                print(f"### DEBUG: Found product name: {product_name}")
                 break
         
         # 제목 생성
@@ -473,6 +490,7 @@ class LostItemAnalyzer:
         if brand and brand.lower() not in title.lower():
             title = f"{brand} {title}"
             
+        print(f"### DEBUG: Generated title: {title}")
         return title
     
     def _generate_description(self, caption: str, answers: Dict[str, str]) -> str:
@@ -543,7 +561,7 @@ class LostItemAnalyzer:
             "computer": "컴퓨터",
             "watch": "시계",
             "book": "책",
-            "headphones": "헤드폰",
+            "headphones": "헤드셋",
             "camera": "카메라",
             "glasses": "안경",
             "tablet": "태블릿",
@@ -552,12 +570,17 @@ class LostItemAnalyzer:
             "airpods": "에어팟"
         }
         
-        # 제목에서 제품 찾기
+        # 제목에서 제품 찾기 - 정확한 단어 매칭 사용
         product_found = False
+        title_words = title.lower().split()
+        
+        print(f"### DEBUG: Title words: {title_words}")
+        
         for en_item, ko_item in common_items_ko.items():
-            if en_item in title.lower():
+            if en_item in title_words:
                 translated_title += ko_item
                 product_found = True
+                print(f"### DEBUG: Found product '{en_item}' in title, translating to '{ko_item}'")
                 break
                 
         # 제품이 없으면 카테고리 사용
@@ -662,7 +685,7 @@ async def startup_event():
 async def root():
     return {"message": "분실물 이미지 분석 API가 실행 중입니다."}
 
-# 업로드된 이미지 분석 후 정보 반환환
+# 업로드된 이미지 분석 후 정보 반환
 @app.post("/analyze")
 async def analyze_image(file: UploadFile = File(...)):
 
