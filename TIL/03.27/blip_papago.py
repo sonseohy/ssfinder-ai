@@ -5,17 +5,20 @@ from PIL import Image
 from transformers import BlipProcessor, BlipForConditionalGeneration, BlipForQuestionAnswering
 from typing import Dict, List, Any
 import os
+import json
+import requests
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 import uvicorn
+import urllib.parse
+from dotenv import load_dotenv
 
 class LostItemAnalyzer:
     def __init__(self):
-        """
-        BLIP 기반 분실물 분석기 초기화
-        """
-        
+        # dotenv를 사용하여 .env 파일에서 환경 변수 로드
+        load_dotenv()  # 현재 디렉토리의 .env 파일을 로드합니다
+
         # 캡셔닝용 BLIP 모델 로드
         print("캡셔닝 모델 로딩 중...")
         self.caption_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-large")
@@ -26,6 +29,21 @@ class LostItemAnalyzer:
         self.vqa_processor = BlipProcessor.from_pretrained("Salesforce/blip-vqa-capfilt-large")
         self.vqa_model = BlipForQuestionAnswering.from_pretrained("Salesforce/blip-vqa-capfilt-large")
         
+        # 파파고 API 설정
+        self.use_papago = False  # API 키가 있을 때만 활성화
+        self.papago_client_id = os.getenv("NAVER_CLIENT_ID")
+        self.papago_client_secret = os.getenv("NAVER_CLIENT_SECRET")
+        
+        if self.papago_client_id and self.papago_client_secret:
+            self.use_papago = True
+            print("파파고 API가 활성화되었습니다.")
+            print(f"Client ID 길이: {len(self.papago_client_id)}")  # 디버깅 출력
+        else:
+            print("파파고 API 키가 설정되지 않았습니다. 일부 필드는 한국어로 번역되지 않을 수 있습니다.")
+            print(f"Client ID: {self.papago_client_id}")  # None인지 확인
+            print(f"Client Secret: {'설정됨' if self.papago_client_secret else '설정되지 않음'}")
+        
+        
         # 카테고리 정의 (영어)
         self.categories = [
             "electronics", "clothing", "bag", "wallet", "jewelry", "card", "id", "computer", "cash", "phone",
@@ -33,7 +51,7 @@ class LostItemAnalyzer:
             "shopping bag", "musical instrument", "car", "miscellaneous"
         ]
         
-        # 카테고리 한영 매핑
+        # 카테고리 한영 매핑 (유지)
         self.category_translation = {
             "electronics": "전자기기",
             "clothing": "의류",
@@ -58,7 +76,7 @@ class LostItemAnalyzer:
             "miscellaneous": "기타"
         }
         
-        # 카테고리 매핑 (캡션의 일반적인 단어를 카테고리로 매핑)
+        # 카테고리 매핑 (캡션의 일반적인 단어를 카테고리로 매핑) - 수정: 단어 단위 매칭
         self.category_mapping = {
             "umbrella": "umbrella",
             "phone": "phone", 
@@ -89,82 +107,21 @@ class LostItemAnalyzer:
             "jewelry": "jewelry"
         }
         
-        # 색상 목록 정의 및 번역
+        # 색상 목록 정의
         self.colors = [
             "red", "blue", "green", "yellow", "black", "white", "gray", "grey", "brown", "purple", 
             "pink", "orange", "silver", "gold", "navy", "beige", "transparent", "multicolor", "teal",
             "turquoise", "maroon", "olive", "cyan", "magenta", "lavender", "indigo", "violet", "tan"
         ]
         
-        self.color_translation = {
-            "red": "빨간색",
-            "blue": "파란색",
-            "green": "초록색",
-            "yellow": "노란색",
-            "black": "검은색",
-            "white": "흰색",
-            "gray": "회색",
-            "grey": "회색",
-            "brown": "갈색",
-            "purple": "보라색",
-            "pink": "분홍색",
-            "orange": "주황색",
-            "silver": "은색",
-            "gold": "금색",
-            "navy": "네이비색",
-            "beige": "베이지색",
-            "transparent": "투명한",
-            "multicolor": "다색",
-            "teal": "청록색",
-            "turquoise": "터콰이즈색",
-            "maroon": "적갈색",
-            "olive": "올리브색",
-            "cyan": "시안색",
-            "magenta": "자주색",
-            "lavender": "라벤더색",
-            "indigo": "인디고색",
-            "violet": "보라색",
-            "tan": "황갈색",
-            "unknown color": "알 수 없는 색상"
-        }
-        
-        # 재질 목록 정의 및 번역
+        # 재질 목록 정의
         self.materials = [
             "plastic", "metal", "leather", "fabric", "paper", "wood", "glass", "ceramic", "rubber",
             "cotton", "polyester", "nylon", "carbon fiber", "stone", "silicone", "aluminium", "steel",
             "cloth", "textile", "canvas", "denim", "wool", "synthetic", "composite", "unknown"
         ]
         
-        self.material_translation = {
-            "plastic": "플라스틱",
-            "metal": "금속",
-            "leather": "가죽",
-            "fabric": "천",
-            "paper": "종이",
-            "wood": "나무",
-            "glass": "유리",
-            "ceramic": "세라믹",
-            "rubber": "고무",
-            "cotton": "면",
-            "polyester": "폴리에스터",
-            "nylon": "나일론",
-            "carbon fiber": "탄소섬유",
-            "stone": "돌",
-            "silicone": "실리콘",
-            "aluminium": "알루미늄",
-            "steel": "강철",
-            "cloth": "천",
-            "textile": "직물",
-            "canvas": "캔버스",
-            "denim": "데님",
-            "wool": "울",
-            "synthetic": "합성 소재",
-            "composite": "복합 소재",
-            "unknown": "알 수 없음",
-            "unknown material": "알 수 없는 재질"
-        }
-        
-        # 브랜드 연관 매핑 (제품 -> 브랜드 연결)
+        # 브랜드 연관 매핑 (제품 -> 브랜드 연결) - 유지
         self.brand_association = {
             # Apple 제품
             "ipad": "apple",
@@ -182,7 +139,7 @@ class LostItemAnalyzer:
             "airmax": "nike",
         }
         
-        # 브랜드 번역 매핑
+        # 브랜드 번역 매핑 - 유지
         self.brand_translation = {
             "apple": "애플",
             "samsung": "삼성",
@@ -221,11 +178,65 @@ class LostItemAnalyzer:
             "unknown": "알 수 없음"
         }
         
+        # 자주 사용되는 제품 이름 한국어 매핑 - 유지 (제목 생성용)
+        self.product_translation = {
+            "phone": "휴대폰",
+            "umbrella": "우산",
+            "wallet": "지갑",
+            "bag": "가방",
+            "laptop": "노트북",
+            "computer": "컴퓨터",
+            "watch": "시계",
+            "book": "책",
+            "headphones": "헤드셋",
+            "earphones": "이어폰",
+            "camera": "카메라",
+            "glasses": "안경",
+            "tablet": "태블릿",
+            "ipad": "아이패드",
+            "iphone": "아이폰",
+            "airpods": "에어팟"
+        }
+        
         print("모델 로딩 완료!")
+
+    # 파파고 API를 사용하여 텍스트 번역
+    def papago_translate(self, text, source="en", target="ko"):
+        """
+        파파고 API를 사용하여 텍스트 번역 (Clova API로 변경)
+        """
+        if not self.use_papago or not text or text.strip() == "":
+            return text
+            
+        # 새로운 Papago API 엔드포인트
+        url = "https://naveropenapi.apigw.ntruss.com/nmt/v1/translation"
+        
+        # 새로운 헤더 형식
+        headers = {
+            "X-NCP-APIGW-API-KEY-ID": self.papago_client_id,
+            "X-NCP-APIGW-API-KEY": self.papago_client_secret,
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        
+        # 데이터 형식 변경
+        encoded_text = urllib.parse.quote(text)
+        data = f"source={source}&target={target}&text={encoded_text}"
+        
+        try:
+            response = requests.post(url, headers=headers, data=data)
+            response.raise_for_status()
+            
+            result = response.json()
+            translated_text = result.get("message", {}).get("result", {}).get("translatedText", "")
+            
+            print(f"### PAPAGO: '{text}' => '{translated_text}'")
+            return translated_text
+        except Exception as e:
+            print(f"번역 API 호출 중 오류 발생: {e}")
+            return text  # 오류 발생 시 원본 텍스트 반환
 
     # 이미지 전처리
     def preprocess_image(self, image_path: str) -> Image.Image:
-
         # 이미지 로드
         image = Image.open(image_path).convert('RGB')
         
@@ -258,9 +269,8 @@ class LostItemAnalyzer:
         caption = self.caption_processor.decode(out[0], skip_special_tokens=True)
         return caption
 
-    # 이미지 질문 답변변
+    # 이미지 질문 답변
     def ask_question(self, image: Image.Image, question: str) -> str:
-
         # 이미지와 질문을 모델 입력으로 처리
         inputs = self.vqa_processor(image, question, return_tensors="pt")
         
@@ -284,21 +294,28 @@ class LostItemAnalyzer:
         
         return answer
 
-    # 캡션에서 카테고리 추출출
-    def extract_category_from_caption(self, caption: str) -> str:
-
+    # 캡션에서 카테고리 추출 - 정확한 단어 매칭 사용
+    def extract_category_from_caption(self, caption):
         caption_lower = caption.lower()
+        words = caption_lower.split()
+        
+        print(f"### DEBUG: Words in caption: {words}")
+        
+        # 키워드를 길이 순으로 정렬 (긴 것이 먼저)
+        sorted_keywords = sorted(self.category_mapping.keys(), key=len, reverse=True)
         
         # 각 매핑된 키워드를 확인
-        for keyword, category in self.category_mapping.items():
-            if keyword in caption_lower:
-                return category
-                
+        for keyword in sorted_keywords:
+            # 전체 단어 매칭 또는 복합어 검사
+            if keyword in words or (len(keyword.split()) > 1 and keyword in caption_lower):
+                print(f"### DEBUG: Found keyword '{keyword}' -> category '{self.category_mapping[keyword]}'")
+                return self.category_mapping[keyword]
+        
+        print("### DEBUG: No category found in caption")
         return ""
 
     # 유효 색상 확인
     def is_valid_color(self, text: str) -> bool:
-
         text = text.lower()
         return any(color in text for color in self.colors)
 
@@ -307,16 +324,10 @@ class LostItemAnalyzer:
         text = text.lower()
         return any(material in text for material in self.materials)
 
-    # 텍스트 목록에서 브랜드 추출출
+    # 텍스트 목록에서 브랜드 추출
     def extract_brand(self, text_list: List[str]) -> str:
-
         # 직접적인 브랜드 언급 확인 (대소문자 구분 없이)
-        common_brands = [
-            "apple", "samsung", "lg", "sony", "nike", "adidas", "puma", "reebok", "louis vuitton", 
-            "gucci", "chanel", "prada", "hermes", "coach", "michael kors", "dell", "hp", "lenovo", 
-            "asus", "acer", "timex", "casio", "seiko", "citizen", "logitech", "microsoft", "canon", 
-            "nikon", "jbl", "bose", "sennheiser", "samsonite", "tumi", "kindle", "google"
-        ]
+        common_brands = [k for k in self.brand_translation.keys() if k != "unknown"]
         
         for text in text_list:
             text_lower = text.lower()
@@ -442,20 +453,26 @@ class LostItemAnalyzer:
         
         return result
     
-    # 답변 기반 게시글 제목 생성성
+    # 답변 기반 게시글 제목 생성
     def _generate_title(self, answers: Dict[str, str], caption: str, category: str, brand: str) -> str:
-
         # 색상 추출
         color = answers["color"].lower()
         
         # 상품 이름 추출 시도 (캡션에서 핵심 단어 추출)
         product_name = ""
-        common_items = ["ipad", "iphone", "macbook", "laptop", "phone", "tablet", "watch", "airpods", 
-                       "wallet", "bag", "umbrella", "headphones", "camera", "book", "glasses"]
         
+        # 정확한 단어 매칭을 위해 캡션을 단어로 분리
+        caption_words = caption.lower().split()
+        
+        common_items = ["headphones", "earphones", "ipad", "iphone", "macbook", "laptop", "phone", 
+                   "tablet", "watch", "airpods", "wallet", "bag", "umbrella", "camera", 
+                   "book", "glasses"]
+        
+        # 단어 단위로 정확하게 매칭
         for item in common_items:
-            if item in caption.lower():
+            if item in caption_words:
                 product_name = item
+                print(f"### DEBUG: Found product name: {product_name}")
                 break
         
         # 제목 생성
@@ -472,7 +489,7 @@ class LostItemAnalyzer:
         # 브랜드 추가 (있는 경우)
         if brand and brand.lower() not in title.lower():
             title = f"{brand} {title}"
-            
+        
         return title
     
     def _generate_description(self, caption: str, answers: Dict[str, str]) -> str:
@@ -497,114 +514,71 @@ class LostItemAnalyzer:
             
         return description.strip()
     
-    # 결과 한국어 번역역
+    # 결과 한국어 번역
     def _translate_results(self, caption: str, title: str, description: str, 
                      category: str, color: str, material: str, 
                      brand: str, distinctive_features: str) -> Dict[str, str]:
-    
-        # 카테고리 번역
+        
+        # 카테고리 번역 (매핑 사용)
         translated_category = self.category_translation.get(category.lower(), category)
+        if translated_category == category and self.use_papago:
+            # 매핑에 없는 경우 파파고 사용
+            translated_category = self.papago_translate(category)
         
-        # 색상 번역
-        translated_color = self.color_translation.get(color.lower(), color)
+        # 색상 번역 (파파고 사용)
+        if self.use_papago:
+            translated_color = self.papago_translate(color)
+        else:
+            translated_color = color
         
-        # 재질 번역
-        translated_material = self.material_translation.get(material.lower(), material)
+        # 재질 번역 (파파고 사용)
+        if self.use_papago:
+            translated_material = self.papago_translate(material)
+        else:
+            translated_material = material
         
-        # 브랜드 번역
+        # 브랜드 번역 (매핑 사용, 브랜드는 보통 번역하지 않음)
         translated_brand = self.brand_translation.get(brand.lower() if brand else "", brand if brand else "")
         
-        # 제목 번역 (색상, 브랜드, 카테고리)
-        translated_title = title
-        
-        # 주요 단어 번역을 통한 제목 번역
-        for en_word, ko_word in self.category_translation.items():
-            translated_title = translated_title.replace(en_word, ko_word)
-            
-        for en_word, ko_word in self.color_translation.items():
-            translated_title = translated_title.replace(en_word, ko_word)
-            
-        for en_word, ko_word in self.brand_translation.items():
-            translated_title = translated_title.replace(en_word, ko_word)
-        
-        # 제목 다시 만들기
+        # 제목 생성
+        # 색상과 브랜드로 시작
         if translated_brand:
             translated_title = f"{translated_brand} {translated_color} "
         else:
             translated_title = f"{translated_color} "
-            
-        # 카테고리 또는 제품명 추가
-        common_items_ko = {
-            "phone": "휴대폰",
-            "umbrella": "우산",
-            "wallet": "지갑",
-            "bag": "가방",
-            "laptop": "노트북",
-            "computer": "컴퓨터",
-            "watch": "시계",
-            "book": "책",
-            "headphones": "헤드폰",
-            "camera": "카메라",
-            "glasses": "안경",
-            "tablet": "태블릿",
-            "ipad": "아이패드",
-            "iphone": "아이폰",
-            "airpods": "에어팟"
-        }
         
-        # 제목에서 제품 찾기
+        # 제품명 추가
+        title_words = title.lower().split()
         product_found = False
-        for en_item, ko_item in common_items_ko.items():
-            if en_item in title.lower():
+        
+        for en_item, ko_item in self.product_translation.items():
+            if en_item in title_words:
                 translated_title += ko_item
                 product_found = True
                 break
-                
+        
         # 제품이 없으면 카테고리 사용
         if not product_found:
             translated_title += translated_category
+        
+        # 특이사항 번역 (파파고 사용)
+        if self.use_papago and distinctive_features:
+            translated_features = self.papago_translate(distinctive_features)
+        else:
+            translated_features = distinctive_features
+        
+        # 설명 번역 (파파고 사용)
+        if self.use_papago and description:
+            # 전체 설명 번역
+            translated_description = self.papago_translate(description)
+        else:
+            # 간단한 설명 생성
+            translated_description = f"이 물건은 {translated_material} 재질의 {translated_title}입니다."
             
-        # 특이사항 번역 - 영어 특이사항을 간단한 한국어로 번역
-        # 기본적인 단어 매핑을 통한 간단한 번역 시도
-        translated_features = distinctive_features
+            # 특이사항이 있으면 추가
+            if translated_features and "unknown" not in translated_features.lower():
+                translated_description += f" 특징: {translated_features}"
         
-        # 일반적인 영어 설명 단어들을 한국어로 대체
-        common_english_terms = {
-            "modern": "현대적인",
-            "stylish": "세련된",
-            "sleek": "매끈한",
-            "shiny": "반짝이는",
-            "beautiful": "아름다운",
-            "elegant": "우아한",
-            "simple": "심플한",
-            "complex": "복잡한",
-            "big": "큰",
-            "small": "작은",
-            "thin": "얇은",
-            "thick": "두꺼운",
-            "lightweight": "가벼운",
-            "heavy": "무거운",
-            "expensive": "고급스러운",
-            "cheap": "저렴한",
-            "portable": "휴대용",
-            "damaged": "손상된",
-            "durable": "내구성 있는",
-            "fragile": "깨지기 쉬운",
-            "old": "오래된",
-            "new": "새로운",
-            "it's": "이것은",
-            "has": "있는",
-            "with": "가진",
-            "and": "그리고"
-        }
-        
-        # 단어 변환 적용
-        for eng_word, kor_word in common_english_terms.items():
-            translated_features = translated_features.replace(eng_word, kor_word)
-        
-        # 설명 번역 - 간단한 한국어 설명으로 대체
-        translated_description = f"이 물건은 {translated_material} 재질의 {translated_title}입니다."
-            
         # 결과 반환
         return {
             "title": translated_title,
@@ -615,11 +589,9 @@ class LostItemAnalyzer:
             "description": translated_description.strip(),
             "distinctive_features": translated_features
         }
-
     
     # 분실물 이미지 분석 메인 함수
     def analyze_lost_item(self, image_path: str) -> Dict[str, Any]:
-
         try:
             # 이미지 전처리
             image = self.preprocess_image(image_path)
@@ -662,10 +634,9 @@ async def startup_event():
 async def root():
     return {"message": "분실물 이미지 분석 API가 실행 중입니다."}
 
-# 업로드된 이미지 분석 후 정보 반환환
+# 업로드된 이미지 분석 후 정보 반환
 @app.post("/analyze")
 async def analyze_image(file: UploadFile = File(...)):
-
     global analyzer
     
     if not analyzer:
@@ -711,6 +682,20 @@ async def analyze_image(file: UploadFile = File(...)):
             pass
         
         raise HTTPException(status_code=500, detail=f"이미지 분석 중 오류 발생: {str(e)}")
+
+# API 상태 확인 및 환경변수 확인 엔드포인트
+@app.get("/status")
+async def status():
+    global analyzer
+    
+    if not analyzer:
+        return {"status": "error", "message": "분석기가 초기화되지 않았습니다."}
+    
+    return {
+        "status": "ok",
+        "papago_api": "active" if analyzer.use_papago else "inactive",
+        "models_loaded": True
+    }
 
 # 직접 실행 시 Uvicorn 서버 시작
 if __name__ == "__main__":
