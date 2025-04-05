@@ -1,0 +1,82 @@
+[
+  {
+    "id": "police_1",
+    "title": "이즐카드(엘로우(노랑)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 카드 > 신용(체크)카드\n습득 장소: \n습득 일자: 2025-03-31\n보관 장소: 신풍지구대\n",
+    "category": "wallet_items",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:13.659033"
+  },
+  {
+    "id": "police_2",
+    "title": "삼성 스마트폰(검정테투리의 투명케이스)(핑크(연한핑크)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 휴대폰 > 삼성휴대폰\n습득 장소: \n습득 일자: 2025-03-29\n보관 장소: 삼산지구대\n",
+    "category": "lost_items_general",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:13.976089"
+  },
+  {
+    "id": "police_3",
+    "title": "삼성 휴대폰(그레이(회)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 휴대폰 > 기타휴대폰\n습득 장소: \n습득 일자: 2025-04-01\n보관 장소: 평안지구대\n",
+    "category": "lost_items_general",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:14.085855"
+  },
+  {
+    "id": "police_4",
+    "title": "삼성 스마트폰(검정색 케이스)(핑크(연한핑크)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 휴대폰 > 삼성휴대폰\n습득 장소: \n습득 일자: 2025-04-01\n보관 장소: 삼산지구대\n",
+    "category": "lost_items_general",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:14.239823"
+  },
+  {
+    "id": "police_5",
+    "title": "아이폰(그레이(회)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 휴대폰 > 아이폰\n습득 장소: \n습득 일자: 2025-04-01\n보관 장소: 신월1파출소\n",
+    "category": "electronics_apple",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:14.386322"
+  },
+  {
+    "id": "police_6",
+    "title": "흰색 쇼핑백(화이트(흰)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 쇼핑백 > 쇼핑백\n습득 장소: \n습득 일자: 2025-04-01\n보관 장소: 신곡지구대\n",
+    "category": "lost_items_general",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:14.515480"
+  },
+  {
+    "id": "police_7",
+    "title": "루이비똥 지갑(코럴(산호)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 지갑 > 기타 지갑\n습득 장소: \n습득 일자: 2025-04-01\n보관 장소: 노형지구대\n",
+    "category": "wallet_items",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:14.660727"
+  },
+  {
+    "id": "police_8",
+    "title": "가죽형 지갑(블랙(검정)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 지갑 > 기타 지갑\n습득 장소: \n습득 일자: 2025-03-30\n보관 장소: 오포동부파출소\n",
+    "category": "wallet_items",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:14.783021"
+  },
+  {
+    "id": "police_9",
+    "title": "남성 지갑(브라운(갈)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 지갑 > 남성용 지갑\n습득 장소: \n습득 일자: 2025-04-01\n보관 장소: 광희지구대\n",
+    "category": "wallet_items",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:14.922982"
+  },
+  {
+    "id": "police_10",
+    "title": "삼성 휴대폰 흰색, 검정색 테두리 투명케이스(화이트(흰)색)을 습득하여 보관하고 있습니다.",
+    "content": "습득물 종류: 휴대폰 > 삼성휴대폰\n습득 장소: \n습득 일자: 2025-04-01\n보관 장소: 기장지구대\n",
+    "category": "lost_items_general",
+    "image_path": null,
+    "created_at": "2025-04-01T17:48:15.045641"
+  }
+]
