@@ -19,6 +19,26 @@ class ImageAnalyzer:
         self.vqa_processor = BlipProcessor.from_pretrained(config.VQA_MODEL)
         self.vqa_model = BlipForQuestionAnswering.from_pretrained(config.VQA_MODEL).to(self.device)
 
+    def preprocess_image(self, image_path: str) -> Image.Image:
+        # 이미지 로드 및 크기 제한
+        image = Image.open(image_path).convert("RGB")
+        
+        # 이미지 크기 조정 (최대 크기 제한)
+        width, height = image.size
+        max_size = config.MAX_IMAGE_SIZE
+        
+        if width > max_size or height > max_size:
+            if width > height:
+                new_width = max_size
+                new_height = int(height * (max_size / width))
+            else:
+                new_height = max_size
+                new_width = int(width * (max_size / height))
+            
+            image = image.resize((new_width, new_height), Image.LANCZOS)
+        
+        return image
+
     # generate_caption 메서드 수정
     def generate_caption(self, image: Image.Image) -> str:
         # 이미지를 모델 입력으로 처리 (GPU로)
