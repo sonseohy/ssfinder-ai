@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+torch
+transformers==4.26.0
+pillow
+python-multipart
+numpy
+kiwipiepy==0.20.4
+python-dotenv
+aiofiles
+httpx

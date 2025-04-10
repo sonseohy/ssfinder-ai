@@ -114,7 +114,10 @@ class HadoopStorage:
             import requests
             
             # 파일 생성 URL
-            create_url = f"http://{self.host}:{self.port}/webhdfs/v1{file_path}?op=CREATE&user.name={self.user}&overwrite=true"
+            # 처음 임베딩 생성 시작할때는 아래 코드로 했었음음
+            # create_url = f"http://{self.host}:{self.port}/webhdfs/v1{file_path}?op=CREATE&user.name={self.user}&overwrite=true"
+            # 중간부터 시작할때는 아래 코드로 하니까 됨
+            create_url = f"{self.host}:{self.port}/webhdfs/v1{file_path}?op=CREATE&user.name={self.user}&overwrite=true"
             
             # PUT 요청 보내기 (리다이렉트 없이)
             response = requests.put(create_url, allow_redirects=False)
